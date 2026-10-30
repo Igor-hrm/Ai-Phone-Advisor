@@ -9,6 +9,8 @@ import { getPhones } from '../../api/phones';
 import { IconTrail } from '../../components/IconTrail/IconTrail';
 import { ErrorPage } from '../ErrorPage';
 
+import { ChatBot } from '../../components/ChatBot';
+
 export const PhonePage = () => {
   const [hasError, setHasError] = useState<boolean>(false);
   const [phones, setPhones] = useState<PhoneDetails[]>([]);
@@ -39,6 +41,7 @@ export const PhonePage = () => {
           <section className={styles.phones__amount}>
             <p>{phones.length} models</p>
           </section>
+          <ChatBot />
 
           <Catalog />
         </div>
