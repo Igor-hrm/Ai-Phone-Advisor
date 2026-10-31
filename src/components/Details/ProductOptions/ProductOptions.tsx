@@ -8,7 +8,7 @@ import {
   getSibling,
   type PhoneDetailsWithNumericId,
 } from '../../../api/productDetails';
-import { useUnavailablePopup } from '../../UnavailablePopup';
+import { useUnavailablePopup } from '../../../hooks';
 
 type ProductOpitionsProps = {
   product: PhoneDetailsWithNumericId;

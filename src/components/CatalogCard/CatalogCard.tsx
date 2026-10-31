@@ -4,7 +4,7 @@ import type { PhoneDetails } from '../../types';
 
 import { Link, useSearchParams } from 'react-router-dom';
 
-import { useUnavailablePopup } from '../UnavailablePopup';
+import { useUnavailablePopup } from '../../hooks';
 
 type CatalogCardProps = {
   product: PhoneDetails;

@@ -1,8 +1,8 @@
 import { createRoot } from 'react-dom/client';
+import { App } from './App';
 import { HashRouter as Router } from 'react-router-dom';
 
-import { App } from './App';
-import { UnavailablePopupProvider } from './components';
+import { UnavailablePopupProvider } from './contexts/UnavailablePopupContext';
 
 import './styles/globals.scss';
 

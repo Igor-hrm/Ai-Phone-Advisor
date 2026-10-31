@@ -1,11 +1,8 @@
-import type { PhoneDetails } from '../types';
+import type { ChatResponse } from '../types';
 
-export type ChatResponse = {
-  reply: string;
-  products: PhoneDetails[];
-};
-
-export const sendMessage = async (message: string): Promise<ChatResponse> => {
+export const getRecommendations = async (
+  message: string,
+): Promise<ChatResponse> => {
   const response = await fetch('http://localhost:3001/api/recommend', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -13,7 +10,7 @@ export const sendMessage = async (message: string): Promise<ChatResponse> => {
   });
 
   if (!response.ok) {
-    throw new Error('Failed to get recommendations');
+    throw new Error('Failed to fetch recommendations');
   }
 
   return response.json();

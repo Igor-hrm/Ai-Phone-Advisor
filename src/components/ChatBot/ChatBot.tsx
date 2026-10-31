@@ -1,35 +1,75 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-
 import styles from './ChatBot.module.scss';
 
-import { sendMessage } from '../../api/chat';
-import type { PhoneDetails } from '../../types';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useLocation } from 'react-router-dom';
+
+import { getRecommendations } from '../../api/chat';
+import type { ChatMessage } from '../../types';
 import { CatalogCard } from '../CatalogCard';
 
-type Message = {
-  id: number;
-  author: 'user' | 'bot';
-  text: string;
-  products?: PhoneDetails[];
-};
+const chatIconPath =
+  'M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z';
 
 export const ChatBot = () => {
-  // lista de mensagens da conversa
-  const [messages, setMessages] = useState<Message[]>([]);
-  // texto que a pessoa está digitando
-  const [input, setInput] = useState('');
-  // true enquanto espera a resposta da IA
-  const [isLoading, setIsLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [input, setInput] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // referência para rolar a conversa até a última mensagem
-  const endRef = useRef<HTMLDivElement>(null);
+  // a função no useState é para descobrir o valor inicial quando criar o estado
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const savedMessages = sessionStorage.getItem('chatMessages');
+
+    //json sempre devolve texto, o parse faz: string -> objeto/array
+    return savedMessages ? JSON.parse(savedMessages) : [];
+  });
+
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const { pathname } = useLocation();
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // stringify objeto/array -> string
+    sessionStorage.setItem('chatMessages', JSON.stringify(messages));
+  }, [messages]);
+
+  useEffect(() => {
+    // fecha o chat quando troca de página, a conversa continua salva
+    setIsOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
+  useEffect(() => {
+    // ao abrir, vai direto para a última mensagem
+    if (isOpen) {
+      listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    // rola só a lista de mensagens, e não a página inteira
+    listRef.current?.scrollTo({
+      top: listRef.current.scrollHeight,
+      behavior: 'smooth',
+    });
   }, [messages, isLoading]);
 
-  const handleSubmit = async (event: FormEvent) => {
-    // impede o navegador de recarregar a página ao enviar o formulário
+  const handleSubmit = (event: FormEvent) => {
+    // não deixa o navegador recarregar a página ao enviar
     event.preventDefault();
 
     const text = input.trim();
@@ -38,41 +78,92 @@ export const ChatBot = () => {
       return;
     }
 
-    // mostra a mensagem da pessoa na hora
     setMessages(prev => [...prev, { id: Date.now(), author: 'user', text }]);
     setInput('');
     setIsLoading(true);
 
-    try {
-      const { reply, products } = await sendMessage(text);
-
-      setMessages(prev => [
-        ...prev,
-        { id: Date.now() + 1, author: 'bot', text: reply, products },
-      ]);
-    } catch {
-      setMessages(prev => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          author: 'bot',
-          text: 'Não consegui responder agora. Tente de novo.',
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
+    getRecommendations(text)
+      .then(({ reply, products }) => {
+        setMessages(prev => [
+          ...prev,
+          { id: Date.now(), author: 'bot', text: reply, products },
+        ]);
+      })
+      .catch(() => {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: Date.now(),
+            author: 'bot',
+            text: "Sorry, I couldn't answer right now. Try again.",
+          },
+        ]);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
-  return (
-    <section className={styles.chat}>
-      <h2 className={styles.chat__title}>Phone Advisor</h2>
+  // botão flutuante, quando o chat está fechado
+  if (!isOpen) {
+    return (
+      <button
+        className={styles.chat__fab}
+        type="button"
+        aria-label="Open Phone Advisor"
+        onClick={() => setIsOpen(true)}
+      >
+        <svg
+          width="26"
+          height="26"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d={chatIconPath} />
+        </svg>
+      </button>
+    );
+  }
 
-      <div className={styles.chat__messages}>
+  return (
+    <section className={styles.chat__panel} aria-label="Phone Advisor">
+      {/* HEADER */}
+      <header className={styles.chat__header}>
+        <h2 className={styles.chat__title}>Phone Advisor</h2>
+
+        <div className={styles.chat__actions}>
+          {messages.length > 0 && (
+            <button
+              className={styles.chat__textButton}
+              type="button"
+              onClick={() => setMessages([])}
+            >
+              Clear
+            </button>
+          )}
+
+          <button
+            className={styles.chat__textButton}
+            type="button"
+            aria-label="Close chat"
+            onClick={() => setIsOpen(false)}
+          >
+            ✕
+          </button>
+        </div>
+      </header>
+
+      {/* MESSAGES */}
+      <div className={styles.chat__messages} ref={listRef}>
         {messages.length === 0 && (
           <p className={styles.chat__hint}>
-            Diga o que você procura. Ex.: &quot;quero um com muita bateria&quot;
-            ou &quot;o mais barato com boa câmera&quot;.
+            Tell me what you are looking for. Ex.: &quot;I want one with a lot
+            of battery&quot; or &quot;the cheapest with a good camera&quot;.
           </p>
         )}
 
@@ -101,20 +192,19 @@ export const ChatBot = () => {
           <p
             className={`${styles.chat__bubble} ${styles['chat__bubble--bot']}`}
           >
-            Pensando...
+            Thinking...
           </p>
         )}
-
-        <div ref={endRef} />
       </div>
 
+      {/* FORM */}
       <form className={styles.chat__form} onSubmit={handleSubmit}>
         <input
           className={styles.chat__input}
           type="text"
           value={input}
+          placeholder="What are you looking for in a phone?"
           onChange={event => setInput(event.target.value)}
-          placeholder="O que você procura em um celular?"
         />
 
         <button
@@ -122,7 +212,7 @@ export const ChatBot = () => {
           type="submit"
           disabled={isLoading}
         >
-          Enviar
+          Send
         </button>
       </form>
     </section>

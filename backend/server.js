@@ -1,4 +1,5 @@
 import express from 'express';
+
 import cors from 'cors';
 import { readFileSync } from 'node:fs';
 import { GoogleGenAI, Type } from '@google/genai';
@@ -12,7 +13,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 // 1) Lê os celulares do arquivo
 const phones = JSON.parse(readFileSync('./phones.json', 'utf-8'));
 
-// 2) Versão compacta, só com o que a IA precisa para recomendar
+// 2) As caracteristicas q o Gemini 'enxerga' e compara
 const catalog = phones.map(p => ({
   id: p.id,
   name: p.name,

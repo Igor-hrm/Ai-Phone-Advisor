@@ -1,6 +1,6 @@
 import './App.scss';
 
-import { Header } from './components';
+import { ChatBot, Header } from './components';
 
 import { PhonePage, ProductDetailsPage } from './modules';
 
@@ -18,6 +18,8 @@ export const App = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+
+      <ChatBot />
     </div>
   );
 };
