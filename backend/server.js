@@ -61,6 +61,7 @@ app.post('/api/recommend', async (req, res) => {
       },
     });
 
+    // Parse para pegar a chegada em texto para obj
     const data = JSON.parse(response.text);
 
     // 4) Descarta ids que a IA inventou
