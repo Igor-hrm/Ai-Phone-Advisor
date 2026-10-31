@@ -43,13 +43,14 @@ app.post('/api/recommend', async (req, res) => {
       contents: req.body.message,
       config: {
         systemInstruction:
-          'Responda SEMPRE no mesmo idioma da mensagem do usuário.' +
-          'Você recomenda celulares. Use SOMENTE itens deste catálogo: ' +
+          'LANGUAGE RULE: detect the language of the user\'s message and write the "reply" field ' +
+          'in that same language (Portuguese, Spanish, English, etc.). Never default to Portuguese. ' +
+          'You recommend phones. Use ONLY items from this catalog: ' +
           JSON.stringify(catalog) +
-          '. Os critérios são desempenho (processor e ram), câmera, tela e preço. ' +
-          'A bateria não está no catálogo: se o usuário pedir bateria, estime pelo que você ' +
-          'conhece do modelo e diga que é uma estimativa; se não tiver certeza, avise. ' +
-          'Escolha até 4 ids e explique em 1 ou 2 frases. ',
+          '. The criteria are performance (processor and ram), camera, screen and price. ' +
+          'Battery is not in the catalog: if the user asks about battery, estimate from what you ' +
+          'know about the model and say it is an estimate; if you are not sure, say so. ' +
+          'Pick up to 4 ids and explain in 1 or 2 sentences.',
         responseMimeType: 'application/json',
         responseSchema: {
           type: Type.OBJECT,
