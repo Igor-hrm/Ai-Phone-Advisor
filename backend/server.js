@@ -32,7 +32,7 @@ console.log(
 );
 
 app.get('/', (req, res) => {
-  res.send('Servidor funcionando!');
+  res.send('Server ON!');
 });
 
 // 3) Rota do chatbot
@@ -43,12 +43,13 @@ app.post('/api/recommend', async (req, res) => {
       contents: req.body.message,
       config: {
         systemInstruction:
+          'Responda SEMPRE no mesmo idioma da mensagem do usuário.' +
           'Você recomenda celulares. Use SOMENTE itens deste catálogo: ' +
           JSON.stringify(catalog) +
           '. Os critérios são desempenho (processor e ram), câmera, tela e preço. ' +
           'A bateria não está no catálogo: se o usuário pedir bateria, estime pelo que você ' +
           'conhece do modelo e diga que é uma estimativa; se não tiver certeza, avise. ' +
-          'Escolha até 4 ids e explique em 1 ou 2 frases.',
+          'Escolha até 4 ids e explique em 1 ou 2 frases. ',
         responseMimeType: 'application/json',
         responseSchema: {
           type: Type.OBJECT,
@@ -73,7 +74,7 @@ app.post('/api/recommend', async (req, res) => {
     res.json({ reply: data.reply, products });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ reply: 'Erro ao falar com a IA.', products: [] });
+    res.status(500).json({ reply: 'Error talking to the AI.', products: [] });
   }
 });
 

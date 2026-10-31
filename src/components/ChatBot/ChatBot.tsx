@@ -27,6 +27,8 @@ export const ChatBot = () => {
 
   const { pathname } = useLocation();
 
+  const lastMessageRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     // stringify objeto/array -> string
     sessionStorage.setItem('chatMessages', JSON.stringify(messages));
@@ -61,11 +63,29 @@ export const ChatBot = () => {
   }, [isOpen]);
 
   useEffect(() => {
-    // rola só a lista de mensagens, e não a página inteira
-    listRef.current?.scrollTo({
-      top: listRef.current.scrollHeight,
-      behavior: 'smooth',
-    });
+    const list = listRef.current;
+
+    if (!list) {
+      return;
+    }
+
+    const lastMessage = messages[messages.length - 1];
+    const lastElement = lastMessageRef.current;
+
+    // resposta do bot: mostra o começo dela, para o texto não ficar acima dos cards
+    if (lastMessage?.author === 'bot' && lastElement) {
+      const top =
+        lastElement.getBoundingClientRect().top -
+        list.getBoundingClientRect().top +
+        list.scrollTop;
+
+      list.scrollTo({ top, behavior: 'smooth' });
+
+      return;
+    }
+
+    // mensagem do usuário ou "Thinking...": vai para o fim
+    list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' });
   }, [messages, isLoading]);
 
   const handleSubmit = (event: FormEvent) => {
@@ -162,14 +182,15 @@ export const ChatBot = () => {
       <div className={styles.chat__messages} ref={listRef}>
         {messages.length === 0 && (
           <p className={styles.chat__hint}>
-            Tell me what you are looking for. Ex.: &quot;I want one with a lot
-            of battery&quot; or &quot;the cheapest with a good camera&quot;.
+            Tell me what you are looking for. Ex.: &quot;I want the best one
+            &quot; or &quot;the cheapest with a good camera&quot;.
           </p>
         )}
 
-        {messages.map(message => (
+        {messages.map((message, index) => (
           <div
             key={message.id}
+            ref={index === messages.length - 1 ? lastMessageRef : null}
             className={`${styles.chat__message} ${styles[`chat__message--${message.author}`]}`}
           >
             <p
